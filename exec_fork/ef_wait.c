@@ -14,8 +14,8 @@ int main(int argc, char **argv)
 	// child process
 	if(!pid)
 	{
-		sleep(5);
-		exit(5);
+		sleep(2);
+		exit(1);
 	}
 	// parent process
 	if(wait(&status) < 0)
@@ -23,8 +23,16 @@ int main(int argc, char **argv)
 		perror("parent wait failed!");
 		exit(1);
 	}
+	// check the returned value
+	printf("value of status : %d\n", status);
+	printf("WIFEXITED(status) : %d\n", WIFEXITED(status));
+	if(!WIFEXITED(status))
+	{
+		printf("child process exit abnomally! macro:%d, exit : %d", WIFEXITED(status), WEXITSTATUS(status));
+		exit(1);
+	}
+	printf("child process exit normally!\n");
 	
-	
-	
+	exit(0);	
 	return 0;
 }
