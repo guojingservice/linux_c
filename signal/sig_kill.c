@@ -16,8 +16,8 @@ void c_action(int dunno)
 
 int main()
 {
-	int p_action();
-	void (*pf_action)(int) = NULL;
+	//int p_action();
+//	void (*pf_action)(int) = NULL;
 	
 	signal(SIGUSR1, p_action);
 	pid_t pid;
@@ -43,7 +43,7 @@ int main()
 			for(;;)
 			{
 				pause();
-				sleep();
+				sleep(1);
 				kill(pid, SIGUSR1);	
 			}
 		
