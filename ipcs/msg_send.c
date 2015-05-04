@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/msg.h>
+#include <string.h>
 
 struct client_info{
 	long cmd;
@@ -38,6 +39,31 @@ int send_message( int qid, struct my_msgbuf *qbuf)
 
 int main(int argc, char **argv)
 {
-
+	int qid;
+	key_t msgkey;
+	struct my_msgbuf my_msg;
+	my_msg.mtype = 1;
+	my_msg.request_id = 1;
+	my_msg.info.cmd = 1;
+	strcpy(my_msg.info.text, "hello world!");
+	
+	// gen msg key
+	msgkey = ftok(".", 'm');
+	
+	if((qid = open_queue(msgkey)) == -1)
+	{
+		perror("open queue");
+		exit(1);
+	}
+	
+	// send msg
+	
+	if((send_message( qid, &my_msg )) == -1)
+	{
+		perror("send message!");
+		exit(1);
+	}
+	
+	printf("send finished with no error!");
 	return 0;
 }
