@@ -107,7 +107,7 @@ int main(int argc, char **argv)
 	int qid;
 	key_t msgkey;
 	struct my_msgbuf my_msg;
-	printf("input qid : %d\n");
+	printf("input qid :\n");
 	scanf("%d", &qid);
 	int choice;
 	printf("input choice: 1 -> read message   2 -> remove message\n");
@@ -116,9 +116,9 @@ int main(int argc, char **argv)
 	{
 		case 1:{
 				int iRet = read_message(qid, 1, &my_msg);
-				if( iRet != 0)
+				if( iRet == -1)
 				{
-					perror("read_message!");
+					perror("read_message failed!");
 					exit(1);
 				}
 				printf("mtype : %d\n", my_msg.mtype);
@@ -127,7 +127,13 @@ int main(int argc, char **argv)
 		       }
 		       break;
 		case 2:{
-						
+				int iRet = remove_queue(qid );
+				if( iRet == -1)
+				{
+					perror("remove message failed!");
+					exit(1);
+				}		
+				printf("remove queue success!");
 		       }
 		       break;
 		default:
