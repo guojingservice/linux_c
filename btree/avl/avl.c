@@ -75,6 +75,27 @@ void back_display( T_NODE *pRoot )
 	print_data( &(pRoot->data));
 }
 
+// 左左
+void ll_rotate( T_NODE *pRoot )
+{
+
+}
+
+// 右右
+void rr_rotate( T_NODE *pRoot )
+{
+
+}
+// 左右
+void lr_rotate( T_NODE *pRoot )
+{
+
+}
+// 右左
+void rl_rote( T_NODE *pRoot )
+{
+	
+}
 // case： 左左 右右 左右 右左
 T_NODE* insert_data( T_NODE *pRoot,  DATA_TYPE data)
 {
@@ -82,7 +103,8 @@ T_NODE* insert_data( T_NODE *pRoot,  DATA_TYPE data)
 	{
 		return NULL;
 	}
-	
+
+
 }
 
 
