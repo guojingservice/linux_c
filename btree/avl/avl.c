@@ -15,8 +15,14 @@ typedef struct t_node{
 	int 					bf;			// average element
 	struct t_node			*pLeft;		// left child
 	struct t_node			*pRight;	// right child
-}T_NODE, *P_NODE;
+}T_NODE, *P_NODE, *AVL_TREE;
 
+const int BIT_LOW_FOUR_MASK = 0x0f;
+
+int NEED_CH_BR = 0;  
+// whether need to change current node's br, used when recursive recall,(递归回溯的时候) 
+int ERR_FLAG = 0;	
+// whether exist duplicate data, insert failed!
 
 T_NODE* node_create(DATA_TYPE data)
 {
@@ -97,14 +103,40 @@ void rl_rote( T_NODE *pRoot )
 	
 }
 // case： 左左 右右 左右 右左
-T_NODE* insert_data( T_NODE *pRoot,  DATA_TYPE data)
+int insert_node( T_NODE **pRoot,  DATA_TYPE data)
 {
-	if( NULL == pRoot )
+	int iResult;
+	if( NULL == *pRoot )
 	{
-		return NULL;
+		*pRoot = node_create(data);
+		return 0;
 	}
-
-
+	if( (*pRoot)->data == data )
+	{
+		printf("same data exist! insert failed!");
+		ERR_FLAG = 1;
+		return -1;
+	}
+	// insert left tree
+	if( (*pRoot)->data > data )
+	{
+		iResult = insert_node( &((*pRoot)->pLeft), data );
+		// exist same data, insert failed!
+		if( ERR_FLAG )
+		{
+			return iResult;
+		}
+	}
+	// insert right tree
+	else if( (*pRoot)->data < data )
+	{
+		iResult = insert_node( &((*pRoot)->pRight), data );
+		// exist same data, insert failed!
+		if( ERR_FLAG )
+		{
+			return iResult;
+		}
+	}
 }
 
 
