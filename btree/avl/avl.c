@@ -24,6 +24,16 @@ int NEED_CH_BR = 0;
 int ERR_FLAG = 0;	
 // whether exist duplicate data, insert failed!
 
+
+
+#define ROUTINE_RECORD( bit_record, direction )\
+ do\
+ {\
+ 	bit_record = bit_record << 1;\
+ 	bit_record = bit_record | direction;\
+ 	bit_record = bit_record & BIT_LOW_FOUR_MASK;\
+ }while(0)
+
 T_NODE* node_create(DATA_TYPE data)
 {
 	T_NODE *pNewNode = malloc(sizeof(T_NODE));
@@ -109,6 +119,7 @@ int insert_node( T_NODE **pRoot,  DATA_TYPE data)
 	if( NULL == *pRoot )
 	{
 		*pRoot = node_create(data);
+		NEED_CH_BR = 1;
 		return 0;
 	}
 	if( (*pRoot)->data == data )
@@ -126,6 +137,8 @@ int insert_node( T_NODE **pRoot,  DATA_TYPE data)
 		{
 			return iResult;
 		}
+		// record recall back path and only save four last steps, 0 present left, 1 present right
+		ROUTINE_RECORD( iResult, 0);
 	}
 	// insert right tree
 	else if( (*pRoot)->data < data )
@@ -136,7 +149,10 @@ int insert_node( T_NODE **pRoot,  DATA_TYPE data)
 		{
 			return iResult;
 		}
+		// record recall back path and only save four last steps
+		ROUTINE_RECORD( iResult, 1 );
 	}
+	return iResult;
 }
 
 
