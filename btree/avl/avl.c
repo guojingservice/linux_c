@@ -171,7 +171,7 @@ void lr_rotate( T_NODE **pRoot )
 
 }
 // 右左
-void rl_rote( T_NODE **pRoot )
+void rl_rotate( T_NODE **pRoot )
 {
 
 	T_NODE *pOri = *pRoot; 
@@ -221,19 +221,19 @@ void adaptToBalance( T_NODE **pRoot, int iRecord )
 	switch( (iRecord & LAST_TWO_BIT) )
 	{
 		case UNB_LL:{
-
+						ll_rotate(pRoot);
 					}
 					break;
 		case UNB_LR:{
-
+						lr_rotate(pRoot);
 					}
 					break;
 		case UNB_RR:{
-
+						rr_rotate(pRoot);
 					}
 					break;
 		case UNB_RL:{
-
+						rl_rotate(pRoot);
 					}
 					break;
 		default:
@@ -302,6 +302,10 @@ int insert_node( T_NODE **pRoot,  DATA_TYPE data)
 		}
 		// record recall back path and only save four last steps, 0 present left, 1 present right
 		ROUTINE_RECORD( iResult, 0);
+		if( 1 == NEED_CH_BR )
+		{
+			selectInsert( pRoot, iResult);
+		}
 	}
 	// insert right tree
 	else if( (*pRoot)->data < data )
@@ -314,13 +318,56 @@ int insert_node( T_NODE **pRoot,  DATA_TYPE data)
 		}
 		// record recall back path and only save four last steps
 		ROUTINE_RECORD( iResult, 1 );
+		if( 1 == NEED_CH_BR )
+		{
+			selectInsert( pRoot, iResult);
+		}
 	}
 	return iResult;
 }
 
+void print_n( int iCount )
+{
+	int i = 0;
+	for( ; i < iCount; ++i )
+	{
+		printf("    ");
+	}
+}
+void easy_print(T_NODE *pRoot, int depth )
+{
+	if( NULL == pRoot )
+	{
+		return;
+	}
+	easy_print( pRoot->pLeft, depth+1 );
+	printf("\n");
+
+	print_n( depth );
+	printf("%d:%d", pRoot->data, pRoot->bf);
+
+	printf("\n");
+	easy_print( pRoot->pRight, depth +1 );
+
+}
 
 int main(int argc, char **argv)
 {
-	
+	T_NODE *pATree = NULL;
+
+	insert_node(&pATree, 5);
+	insert_node(&pATree, 3);
+	insert_node(&pATree, 8);
+	insert_node(&pATree, 1);
+	insert_node(&pATree, 4);
+	insert_node(&pATree, 0);
+
+	//printf("middle display tree!\n");
+	//infi_display(pATree);
+
+	printf("*****\n");
+
+	easy_print(pATree, 0);
+
 	return 0;
 }
