@@ -87,6 +87,8 @@ static int create_and_bind(char *host, char *port)
 	{
 		perror("setsockopt failed!"), exit(1);
 	}
+
+	make_socket_non_blocking(sd);
 	
 	if( bind( sd, (struct sockaddr *) &local, sizeof(local)))
 		perror("bind failed!"), exit(1);	
@@ -106,7 +108,7 @@ int main(int argc, char **argv)
 
 	sfd = create_and_bind("0.0.0.0", "6223");
 
-	efd = epoll_create(0);
+	efd = epoll_create1(0);
 	if(-1 == efd)
 		perror("epoll_create failed!"), exit(1);
 
