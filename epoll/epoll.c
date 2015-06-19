@@ -13,6 +13,8 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 #include <netdb.h>
 
 #define MAX_EVENT_COUNT 64
@@ -197,6 +199,7 @@ int main(int argc, char **argv)
 					// have data on the fd waiting to be read
 
 				int done = 0;
+				char tempBuf[128] = {0};
 				while(1)
 				{
 					char buf[512];
@@ -217,6 +220,20 @@ int main(int argc, char **argv)
 						done =1;
 						break;
 					}
+					//int getpeername(int sockfd, struct sockaddr *addr, socklen_t *addrlen);
+					// fetch peer ip
+					struct sockaddr_in incom_addr;
+					int sockLen = sizeof(incom_addr);
+					iRet = getpeername(events[i].data.fd, (struct sockaddr *)&incom_addr, &sockLen);
+					if( 0 == iRet )
+					{
+						char *pId = (char *)inet_ntoa((incom_addr.sin_addr));
+						//strcpy(tempBuf, inet_ntoa(addr.sin_addr));
+						//char *pPeerIp = inet_ntoa(addr.sin_addr);
+						//sprintf(temp, "%s\n", pPeerIp);
+						//write(1, temp, strlen(temp));
+						printf("Incoming request , source Ip : %s\n\n", pId);
+					}
 					s = write(1, buf, count);
 					if( -1 == s)
 					{
@@ -231,7 +248,7 @@ int main(int argc, char **argv)
 				}
 
 			}
-
+			
 			
 		}
 
