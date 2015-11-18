@@ -153,8 +153,46 @@ listNode *listNext(listIter *iter)
     return current;
 }
 
-void listReleaseIterator(listIter *iter){}
-list *listDup(list *orig){}
+void listReleaseIterator(listIter *iter)
+{
+    free(iter);
+}
+/*
+ * duplicate the list without modifing the original list
+ * if the dup method of the list is not set, then just copy the node value
+ */
+list *listDup(list *orig)
+{
+    struct list *newList;
+    listIter *iter;
+    listNode *node;
+   
+    if((newList = listCreate()) == NULL)
+        return NULL;
+    newList->dup = orig->dup;
+    newList->free = orig->free;
+    newList->match = orig->match;
+    iter = listGetIterator(orig, S_HEAD_TO_TAIL);
+    while((node = listNext(iter))!=NULL)
+    {
+        void *value;
+        if(newList->dup)
+        {
+            value = copy->dup(node->value);
+            if(NULL == value)
+            {
+                listRelease(copy);
+                listRelease(iter);
+                return NULL;
+            }
+        }
+        else
+        {
+            
+        }
+    }    
+ 
+}
 listNode *listSearchKey(list *list, void *key){}
 listNode *listIndex(list *list, long index){}
 void listRewind(list *list, listIter *li){}
