@@ -160,6 +160,7 @@ void listReleaseIterator(listIter *iter)
 /*
  * duplicate the list without modifing the original list
  * if the dup method of the list is not set, then just copy the node value
+        return NULL;
  */
 list *listDup(list *orig)
 {
@@ -178,24 +179,95 @@ list *listDup(list *orig)
         void *value;
         if(newList->dup)
         {
-            value = copy->dup(node->value);
+            value = newList->dup(node->value);
             if(NULL == value)
             {
-                listRelease(copy);
-                listRelease(iter);
+                listRelease(newList);
+                listReleaseIterator(iter);
                 return NULL;
             }
         }
         else
         {
-            
+            value = node->value;    
         }
-    }    
- 
+        if(listAddNodeTail(newList, value) == NULL)
+        {
+            listRelease(newList);
+            listReleaseIterator(iter);
+            return NULL;
+        }
+    }
+    listReleaseIterator(iter);
+    return newList;
 }
-listNode *listSearchKey(list *list, void *key){}
-listNode *listIndex(list *list, long index){}
-void listRewind(list *list, listIter *li){}
-void listRewindTail(list *list, listIter *li){}
-void listRotate(list *list){}
+
+listNode *listSearchKey(list *list, void *key)
+{
+    listIter *iter;
+    listNode *node;
+    
+    iter = listGetIterator(list, S_HEAD_TO_TAIL);
+    while((node = listNext(iter)) != NULL)
+    {
+        if(list->match)
+        {
+            if(list->match(node->value, key)){
+                listReleaseIterator(iter);
+                return node;
+            }
+        }
+        else
+        {
+            if(key == node->value){
+                listReleaseIterator(iter);
+                return node;
+            }
+        }
+    }
+    listReleaseIterator(iter);
+    return NULL;
+}
+
+
+listNode *listIndex(list *list, long index){
+    listNode *node;
+    if(index < 0){
+        index = (-index) -1;
+        node = list->tail;
+        while(index-- && node ) node = node->prev;
+    }
+    else{
+        node = list->head;
+        while(index-- && node) node = node->next;
+    }
+    return node;
+}
+
+void listRewind(list *list, listIter *li){
+    li->next = list->head;
+    li->direction = S_HEAD_TO_TAIL;    
+}
+void listRewindTail(list *list, listIter *li){
+    li->next = list->tail;
+    li->direction = S_TAIL_TO_HEAD;
+}
+
+/*
+ * rotate the list
+ */
+
+void listRotate(list *list){
+    
+    listNode *tail = list->tail;
+    if(listLength(list) <= 1) return;
+    
+    list->tail = tail->prev;
+    list->tail->next = NULL;
+    
+    list->head->prev = tail;
+    tail->prev = NULL;
+    tail->next = list->head;
+    list->head = tail;
+}
 
