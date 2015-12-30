@@ -17,10 +17,6 @@
     struct list_head name = LIST_HEAD_INIT(name)
 
 
-//LIST_HEAD(new_list)
-//
-//struct list_head new_list = { &(name), &(name)}
-//
 
 
 struct list_head{
@@ -108,7 +104,7 @@ static inline void list_add_tail(struct list_head *new, struct list_head *head)
  */
 static inline void list_del(struct list_head *entry)
 {
-    __list_del(entry);
+    __list_del(entry->prev, entry->next);
     // entry->prev = LIST_POISON1 ?? 0x00100100 + POISON_POINTER_DELTA
     // entry->next = LIST_POISON2 ?? 0x00100100 ...
 }
@@ -167,5 +163,43 @@ static inline void list_splice_init(struct list_head *list,
         INIT_LIST_HEAD(list);
     }
 }
+
+#define list_for_each(pos, head) \
+    for (pos = (head)->next; pos != (head); pos = pos->next)
+
+/*
+ * support remove during interate a list, just save the next node
+ *
+ */
+#define list_for_each_safe(pos, n, head) \
+    for(pos = (head)->next, n = pos->next; pos != head; pos = n, n=pos->next)
+
+
+
+
+/*
+ * list_entry - get the struct for this entry
+ * @ptr: the &struct list_head pointer
+ * @type: the type of the struct
+ * @member: the name of the list_struct within the struct
+ */
+#define list_entry(ptr, type, member) \
+    container_of(ptr, type, member)
+
+/*
+ * iterate over list of given type
+ * @pos: the type to use as loop cursor
+ * @head: the head of the list
+ * @member: the name of the list_struct within the struct
+ *
+ */
+#define list_for_each_entry(pos, head, member) \
+    for (pos = list_entry((head)->next, typeof(*pos), member); \
+         &pos->member != (head); \
+         pos = list_entry(pos->member.next, typeof(*pos), member))
+
+
+    
+
 
 #endif
