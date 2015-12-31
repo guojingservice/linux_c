@@ -25,7 +25,8 @@
     const typeof( ((type *)0)->member ) *__mptr = (ptr);    \
     (type *)( (char *)__mptr - offsetof(type, member));})
 
-static inline bool is_power_of_2(unsigned long n){
+static inline int is_power_of_2(unsigned int n)
+{
     return ( n != 0 && ( (n & (n - 1)) == 0 ));
 }
 
@@ -60,5 +61,24 @@ static inline unsigned int right_most_bit(unsigned int fig){
 static inline unsigned int roundup_power_of_2(unsigned int fig){
     return fig == 0 ? 2 : 1 << (left_most_bit(fig) + 1);
 }
+
+// (void) (&__min1 == &__min2)  is preventing the comparison of different types
+#define min(x, y) ({    \
+    typeof(x) __min1 = (x); \
+    typeof(y) __min2 = (y); \
+    (void) (&__min1 == &__min2);    \
+    __min1 < __min2 ? __min1 : __min2;  \
+})
+
+#define max(x,y) ({ \
+    typeof(x) __max1 = (x); \
+    typeof(y) __max2 = (y); \
+    (void) (&__max1 == &__max2);    \
+    __max1 > __max2 ? __max1 : __max2;  \
+})
+
+#define swap(a,b) \
+    do { typeof(a) __tmp = (a); (a) = (b); (b) = __tmp;} while(0)
+
 
 #endif
