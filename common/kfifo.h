@@ -37,17 +37,32 @@ static inline void __kfifo_reset(struct kfifo *fifo){
     fifo->in = fifo->out = 0;
 }
 
-unsigned int __kiffo_put(struct kfifo *fifo,
+unsigned int __kfifo_put(struct kfifo *fifo,
                                const unsigned char *buffer,
                                unsigned int len);
 unsigned int __kfifo_get(struct kfifo *fifo,
                                unsigned char * buffer,
                                unsigned int len);
 
+unsigned int __kfifo_peek(struct kfifo *fifo,
+                          unsigned char *buffer,
+                          unsigned int len);
+
 static inline void kfifo_reset(struct kfifo *fifo){
     pthread_mutex_lock(&fifo->mutex);
     __kfifo_reset(fifo);
     pthread_mutex_unlock(&fifo->mutex);
+}
+
+static inline unsigned int kiffo_peek(struct kfifo *fifo,
+                                      unsigned char *buffer,
+                                      unsigned int len)
+{
+    unsigned int ret;
+    pthread_mutex_lock(&fifo->mutex);
+    ret = __kfifo_peek(fifo, buffer, len);
+    pthread_mutex_unlock(&fifo->mutex);
+    return ret;
 }
 
 static inline unsigned int kfifo_get(struct kfifo *fifo,

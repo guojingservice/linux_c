@@ -1,14 +1,11 @@
 
-objects = main.o dlist.o
-hobjects = dlist.h klist.h util.h
+objects = 	main.o \
+			dlist.o \
+			kfifo.o
 
-comtest : $(objects) $(hobjects)
-	cc -o comtest $(objects)
+comtest : $(objects)
+	cc -o comtest $(objects) -lpthread
     
-main.o : main.c klist.h
-	cc -c main.c
-#dlist.o : dlist.c
-#	cc -c dlist.c
 
 
 clean :

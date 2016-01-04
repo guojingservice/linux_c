@@ -6,6 +6,7 @@
 #include <string.h>
 #include "dlist.h"
 #include "klist.h"
+#include "kfifo.h"
 
 void comTestList()
 {
@@ -86,12 +87,88 @@ void comTestKlist()
             pStu->name,
             pStu->num);
     //free(pStu); this will cause invalid member address access
-    //
-    
-    
-     
+    //     
 }
 
+// global shared fifo
+struct kfifo *pkfifo = NULL;
+int needFinish = 0;
+// put int into fifo
+void *thr_put(void *arg){
+    int i;
+    int ret;
+    printf("put thread start!\n");
+    for(i=0;i<100;++i){
+        ret = kfifo_put(pkfifo, (unsigned char *)&i, sizeof(i));
+        if(ret != sizeof(i)){
+            if(kfifo_len(pkfifo) == pkfifo->size)
+            {
+                    printf("fifo is full, sleep 1 second!\n");
+                    sleep(1);
+            }
+            else
+            {
+                printf("put failed!\n");
+                break;    
+            }
+        }
+        printf("put %d\n", i);
+    }
+    needFinish = 1;// end the get thread
+}
+
+// get int from fifo
+void *thr_get(void *arg){
+    int ret;
+    int data;
+    printf("get thread start!\n");
+    while(1){
+        ret = kfifo_get(pkfifo, (unsigned char *)&data, sizeof(data));
+        if(ret == sizeof(data))
+            printf("get %d\n",data);
+        if(needFinish&&kfifo_len(pkfifo)==0)
+            break;
+    }
+}
+
+// kfifo test
+void comTestFifo(){
+    // allocate  a fifo
+    pkfifo = kfifo_alloc(1 << 10);
+    /*
+    int a[2] = {2,4};
+    kfifo_put(pkfifo, (unsigned char *)(&a[0]), sizeof(a[0]));
+    kfifo_put(pkfifo, (unsigned char *)(&a[1]), sizeof(a[0]));
+
+    while(kfifo_len(pkfifo)>0){
+        int data;
+        kfifo_get(pkfifo, (unsigned char *)&data, sizeof(data));
+        printf("get : %d\n", data);   
+    } 
+    */
+
+    
+    // then create two thread, one put int into fifo, one read int from fifo
+    pthread_t ptid, gtid;
+    
+    int err = pthread_create(&ptid, NULL, thr_put, NULL);
+    if(0!= err){
+        printf("put thread create failed!\n");
+        return ;  
+    }
+    err = pthread_create(&gtid, NULL, thr_get, NULL);
+    if(0!=err){
+        printf("get thread create failed!\n");
+        return ;
+    }
+    int *ret;
+    pthread_join(ptid, (void **)&ret);
+    printf("put thread returned!\n");
+    pthread_join(gtid, (void **)&ret);
+    printf("get thread returned!\n");
+    kfifo_free(pkfifo);
+    return ;
+}
 
 
 
