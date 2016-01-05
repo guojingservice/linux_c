@@ -98,7 +98,7 @@ void *thr_put(void *arg){
     int i;
     int ret;
     printf("put thread start!\n");
-    for(i=0;i<100;++i){
+    for(i=0;i<10000000;++i){
         ret = kfifo_put(pkfifo, (unsigned char *)&i, sizeof(i));
         if(ret != sizeof(i)){
             if(kfifo_len(pkfifo) == pkfifo->size)
@@ -113,6 +113,8 @@ void *thr_put(void *arg){
             }
         }
         printf("put %d\n", i);
+        //sleep 1
+        //sleep(1);
     }
     needFinish = 1;// end the get thread
 }
@@ -134,7 +136,7 @@ void *thr_get(void *arg){
 // kfifo test
 void comTestFifo(){
     // allocate  a fifo
-    pkfifo = kfifo_alloc(1 << 10);
+    pkfifo = kfifo_alloc(1 << 20);
     /*
     int a[2] = {2,4};
     kfifo_put(pkfifo, (unsigned char *)(&a[0]), sizeof(a[0]));
