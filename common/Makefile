@@ -22,7 +22,7 @@ $(COMM_LIB): $(COMM_OBJ)
 	ar r $(COMM_LIB) $^
 
 $(COMM_SO): $(COMM_OBJ)
-	$(CC) -o $(COMM_SO) $(SHARED) $(CFLAGS) $^ $(COMM_IMP_LIB)
+	$(CC) -o $(COMM_SO) $(SHARED) $(CFLAGS)  $(COMM_IMP_LIB) $^
 
 $(COMM_UNIT_TEST) : $(COMM_OBJ)
 	$(CC) -o $@ $(CFLAGS) $(COMM_IMP_LIB)  $(COMM_OBJ)
