@@ -6,7 +6,10 @@
  */
 #ifndef _MEMPOOL_H
 #define _MEMPOOL_H
-
+#include <stddef.h>
+#include <stdint.h>
+#include <string.h>
+#include <stdlib.h>
 #include "util.h"
 
 #define MEMPOOL_MAGIC 0x1234
@@ -65,7 +68,7 @@ struct mem_pool{
     char res[64]; // preserve;
     
     // start of the memblock area and data area
-    struct memblock blocks[1];
+    struct mem_block blocks[1];
 
 };
 
@@ -93,7 +96,7 @@ struct mem_pool{
 #define MEMPOOL_INNER_DATA_SIZE(max) MEMPOOL_ROUND(MEMPOOL_INNER_DATA_BASE_SIZE(max),MEMPOOL_PAGE_SIZE)
 
 // total size of mempool
-#define MEMPOOL_CALC(max, unit) (MEMPOOL_INNER_DATA_SIZE(max) + MEMPOOL_DATA_SIZE(unit))
+#define MEMPOOL_CALC(max, unit) (MEMPOOL_INNER_DATA_SIZE(max) + MEMPOOL_DATA_SIZE(max, unit))
 
 
 #define MEMPOOL_GET_PTR(pstpool, idx) ((struct mem_block *)((pstpool)->blocks + ((size_t)(idx) % (pstpool->max)))) 
@@ -119,25 +122,25 @@ unsigned int __mempool_calc_size(unsigned int max, unsigned int unit);
  * @return: 0 success 
  *          -1 fail
  */
-int mempool_init(struct mempool **ppmempool, unsigned int max, 
+int mempool_init(struct mem_pool **ppmempool, unsigned int max, 
                  unsigned int unit,
                  void *pbase,
                  unsigned int size);
 
 
-void __mempool_init_head(struct mempool *pmempool,
+void __mempool_init_head(struct mem_pool *pmempool,
                          unsigned int max,
                          unsigned int unit,
                          unsigned int size);
 
-void __mempool_init_body(struct mempool *pmempool);
+void __mempool_init_body(struct mem_pool *pmempool);
 
-int __mempool_check_head(struct mempool *pmempool,
+int __mempool_check_head(struct mem_pool *pmempool,
                          unsigned int max,
                          unsigned int unit,
                          unsigned int size);
 
-int __mempool_check_chain(struct mempool *pmempool)
+int __mempool_check_chain(struct mem_pool *pmempool);
 
 
 /* allocate mempool memory and init
@@ -149,7 +152,7 @@ int __mempool_check_chain(struct mempool *pmempool)
  * @return: 0 success
  *          -1 fail
  */ 
-int mempool_new(struct mempool **ppmempool,
+int mempool_new(struct mem_pool **ppmempool,
                 unsigned int max,
                 unsigned int unit);
 
@@ -168,7 +171,7 @@ int mempool_new(struct mempool **ppmempool,
  *          -1 fail
  *
  */
-int mempool_destroy(struct mempool **ppmempool);
+int mempool_destroy(struct mem_pool **ppmempool);
 
 
 

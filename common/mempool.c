@@ -1,9 +1,10 @@
 #include "mempool.h"
 
 
-unsigned int __mempool_calc_size(unsigned int max, unsigned int unit){
+unsigned int __mempool_calc_size(unsigned int max, unsigned int unit)
+{    
     unsigned int size;
-    size = MEMPOOL_CALC(max, unit);
+    //size = MEMPOOL_CALC(max, unit);
     return size;
 }
 
@@ -99,7 +100,7 @@ void __mempool_init_body(struct mem_pool *pmempool){
         pblock = MEMPOOL_GET_PTR(pmempool, i);
     
         pblock->valid = 0;
-        memset(&pblock->res, 0, sizeof(pblock->res);
+        memset(&pblock->res, 0, sizeof(pblock->res));
         pblock->index = 0;
         pblock->next = -1;
         pblock->prev = i - 1;
@@ -143,4 +144,13 @@ int mempool_new(struct mem_pool **ppmempool,
 
 }
 
-
+int mempool_destroy(struct mem_pool **ppmempool){
+    if(ppmempool && *ppmempool){
+        if((*ppmempool)->is_calloc){
+            free(*ppmempool);
+        }
+        *ppmempool = NULL;
+        return 0;
+    }
+    return -1;
+}
