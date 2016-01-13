@@ -10,6 +10,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <stdlib.h>
+#include <assert.h>
 #include "util.h"
 
 #define MEMPOOL_MAGIC 0x1234
@@ -20,6 +21,9 @@
 
 #define MEMPOOL_PAGE_SIZE 4096 // page size
 #define MEMPOOL_USER_DATA_ALIGN 8 //user data align bytes
+
+
+#define MEMPOOL_INVALID_INDEX -1
 
 struct mem_block{
     int valid;
@@ -101,6 +105,79 @@ struct mem_pool{
 
 #define MEMPOOL_GET_PTR(pstpool, idx) ((struct mem_block *)((pstpool)->blocks + ((size_t)(idx) % (pstpool->max)))) 
 
+
+#define MEMPOOL_IDX2POS(pm, idx) ((idx) % (pm)->max)
+
+#define MEMPOOL_INSERT_FREE_LINK_HEAD(pmempool, pblock) {   \
+    int pos = MEMPOOL_IDX2POS(pmempool, (pblock)->index);   \
+    (pmempool)->next = (pmempool)->free_head;               \
+    (pmempool)->valid = 0;                                  \
+    (pmempool)->prev = MEMPOOL_INVALID_INDEX;               \
+    if(MEMPOOL_INVALID_INDEX == (pmempool)->free_head){     \
+        (pmempool)->free_tail = pos;                        \
+    }else{                                                   \
+        typeof(*pblock) *pnext = MEMPOOL_GET_PTR(pmempool, (pmempool)->free_head);                                                          \
+        pnext->prev = pos;                                     \
+    }                                                           \
+    (pmempool)->free_head = pos;                            \
+}
+
+#define MEMPOOL_INSERT_FREE_LINK_TAIL(pmempool, pblock) {\
+    (pblock)->next = MEMPOOL_INVALID_INDEX;             \
+    (pblock)->valid = 0;                                \
+    if(MEMPOOL_INVALID_INDEX == (pmempool)->free_tail){ \
+        (pmempool)->free_head = MEMPOOL_IDX2POS(pmempool, (pblock)->index); \
+        (pmempool)->free_tail = (pmempool)->free_head;  \
+        (pblock)->prev = MEMPOOL_INVALID_INDEX;         \
+    }else{                                              \
+        typeof(*pblock) *ptail = MEMPOOL_GET_PTR(pmempool, (pmempool)->free_tail);               \
+        ptail->next = MEMPOOL_IDX2POS(pmempool, (pblock)->index);               \
+        (pmempool)->free_tail = ptail->next;                                   \
+        (pblock)->prev = MEMPOOL_IDX2POS(pmempool,(ptail)->index);              \
+    }\
+}
+
+#define MEMPOOL_GET_DATA(pmempool, pblock)      ({\
+    int pos = MEMPOOL_IDX2POS(pmempool,(pblock)->index);    \
+    (void *)((size_t)(pmempool) + (pmempool)->data_off + (pmempool)->real_unit * pos);                           \
+})
+
+
+#define MEMPOOL_DELETE_FREE_LINK(pmempool, pblock) {\
+    (pmempool)->free_head = (pblock)->next;\
+    if(MEMPOOL_INVALID_INDEX == (pmempool)->free_head){ \
+        (pmempool)->free_tail = MEMPOOL_INVALID_INDEX; \
+    }else{ \
+        typeof(*pblock) *phead = MEMPOOL_GET_PTR(pmempool, (pmempool->free_head));\
+        phead->prev = MEMPOOL_INVALID_INDEX;\
+    }  \
+}
+
+#define MEMPOOL_DELETE_USED_LINK(pmempool, pblock)  {       \
+    (pblock)->valid = 0;                                    \
+    if(MEMPOOL_INVALID_INDEX != (pblock)->prev){            \
+        typeof(*pblock) pprev = MEMPOOL_GET_PTR(pmempool, (pblock)->prev); \
+        pprev->next = (pblock)->next;                       \
+    }else{                                                  \
+        pmempool->used_head = (pblock)->next;    \
+    }                                                                   \
+    if(MEMPOOL_INVALID_INDEX != (pblock)->next){             \
+        typeof(*pblock) pnext = MEMPOOL_GET_PTR(pmempool, (pblock)->next); \
+        pnext->prev = (pblock)->prev;        \
+    }                                                               \
+}
+
+#define MEMPOOL_INSERT_USED_LINK(pmempool, pblock) {\
+    if(MEMPOOL_INVALID_INDEX != (pmempool)->used_head){\
+        typeof(*pblock) *pnext = MEMPOOL_GET_PTR(pmempool, (pmempool)->used_head);\
+        pnext->prev = MEMPOOL_IDX2POS(pmempool, (pblock)->index);\
+    }\
+    (pblock)->next = (pmempool)->used_head; \
+    (pblock)->prev = MEMPOOL_INVALID_INDEX; \
+    (pmempool)->used_head = MEMPOOL_IDX2POS(pmempool, (pblock)->index);\
+    (pmempool)->used ++; \
+    (pblock)->valid = 1; \
+}
 // calculate the size of mem needed by mempool
 /*
  * @ max: capacity of mempool
@@ -174,8 +251,48 @@ int mempool_new(struct mem_pool **ppmempool,
 int mempool_destroy(struct mem_pool **ppmempool);
 
 
+/*
+ * set method of the mempool, FIFO or LIFO
+ *
+ * @pmempool: pointer to mempool
+ * @method: integer of method
+ *
+ * @return: -1:failed 
+ *          old method: success
+ */
+
+static inline int mempool_set_method(struct mem_pool *pmempool, 
+                                     int method){
+    int old;
+    if(NULL == pmempool)
+        return -1;
+    
+    old = pmempool->method;
+    pmempool->method = method;
+    return old;
+}
+
+/*
+ * allocate one memblock and return the idx
+ *
+ * @pmempool: pointer to mempool
+ *
+ * @return: idx of the allocated memblock
+ *
+ */
+
+int mempool_alloc(struct mem_pool *pmempool);
 
 
+/*
+ * get the address of the allocated memory by idx
+ * 
+ * @pmempool: pointer to mempool
+ * @idx: idx allocated by mempool
+ *
+ * @return: the address of the allocated for app data
+ */
+void * mempool_get(struct mem_pool *pmempool, int idx);
 
 
 #endif

@@ -154,3 +154,52 @@ int mempool_destroy(struct mem_pool **ppmempool){
     }
     return -1;
 }
+
+
+int mempool_alloc(struct mem_pool *pmempool){
+    int pos;
+    int idx;
+    struct mem_block *pblock;
+    if(NULL == pmempool)
+        return -1;
+
+    if(pmempool->used >= pmempool->max)
+        return -1;
+
+    //assert(MEMPOOL_INVALID_INDEX != pmempool->free_head);
+    if(pmempool->start != pmempool->end)
+        return -3;
+    
+    pos = pmempool->free_head;
+    pblock = MEMPOOL_GET_PTR(pmempool, pos);
+    
+    idx = (pblock->index / pmempool->max) * pmempool->max + pmempool->max + pos;
+    if(idx < 0){
+        if( 0 == pos)
+            idx = pmempool->max;
+        else
+            idx = pos;
+    }
+    pblock->index = idx;
+    pmempool->last_index = idx;
+    
+    MEMPOOL_DELETE_FREE_LINK(pmempool, pblock);
+    MEMPOOL_INSERT_USED_LINK(pmempool, pblock);
+
+    return idx;
+    
+}
+
+void * mempool_get(struct mem_pool *pmempool, int idx){
+    struct mem_block *pblock =NULL;
+    if(NULL == pmempool)
+        return NULL;
+    pblock = MEMPOOL_GET_PTR(pmempool, idx);
+    
+    if(!pblock->valid || (pblock->index != idx)){
+        return NULL;
+    }
+    else{
+        return MEMPOOL_GET_DATA(pmempool, pblock);
+    }
+}
