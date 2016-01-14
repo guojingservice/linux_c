@@ -7,7 +7,7 @@
 #include "dlist.h"
 #include "klist.h"
 #include "kfifo.h"
-
+#include "mempool.h"
 void comTestList()
 {
     list *pList = listCreate();
@@ -172,6 +172,26 @@ void comTestFifo(){
     return ;
 }
 
+void comTestMempool(){
+    struct mem_pool *pm = NULL;
+    int ret;
+    ret = mempool_new(&pm, 1000, 32);
+    printf("ret :%d\n", ret);
+    
+    int idx = mempool_alloc(pm);
+    printf("allocated idx : %d\n", idx);
 
+    unsigned char * pStr = (unsigned char *)mempool_get(pm, idx);
+    if(NULL == pStr)
+        return;
+
+    sprintf(pStr, "helloworld");
+
+    printf("mempool used :%d\n", pm->used);
+
+
+    
+    return;
+}
 
 #endif
