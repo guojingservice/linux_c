@@ -21,7 +21,7 @@ struct radix_node{
 struct radix_tree{
     struct radix_node *root;
     struct radix_node *free;
-    struct radix_node *
+//    struct radix_node *
 
 };
 
