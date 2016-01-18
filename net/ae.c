@@ -101,3 +101,130 @@ void aeDeleteEventLoop(aeEventLoop *eventLoop){
     free(eventLoop);
 }
 
+// get object fd 's event
+int aeGetFileEvents(aeEventLoop *eventLoop, int fd){
+    if(fd >= eventLoop->setsize) return 0;
+    aeFileEvent *fe = &eventLoop->events[fd];
+    return fe->mask;
+}
+
+// get current time of seconds and milliseconds 
+static void aeGetTime(long *seconds, long *milliseconds){
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    *seconds = tv.tv_sec;
+    *milliseconds = tv.tv_usec/1000;
+}
+
+// make current time added by given milliseconds
+// and save result to sec and ms
+static void aeAddMillisecondsToNow(long long milliseconds, long *sec, long *ms){
+    long cur_sec, cur_ms, when_sec, when_ms;
+    // get current time
+    aeGetTime(&cur_sec,&cur_ms);
+    
+    // calc result of after added milliseconds 
+    
+    when_sec = cur_sec + milliseconds/1000;
+    when_ms = cur_ms + millisecons%1000;
+    
+    if(when_ms >=1000)
+    {
+        when_sec++;
+        when_ms -= 1000;
+    }
+    
+    *sec = when_sec;
+    *ms = when_ms;
+}
+
+// creat time event
+//
+long long aeCreateTimeEvent(aeEventLoop *eventLoop, long long milliseconds,
+                            aeTimeProc *proc, void *clientData,
+                            aeEventFinalizerProc *finalizerProc){
+    // update time calc counter
+    long long id = eventLoop->timeEventNextId ++;
+    // create time event structure
+    aeTimeEvent *te;
+    te = (aeTimeEvent*)malloc(sizeof(*te));
+    if(NULL == te) return AE_ERR;
+    
+    // set id
+    te->id = id;
+    
+    // set handler of time event
+    aeAddMillisecondsToNow(milliseconds, &te->when_sec, &te->when_ms);
+    
+    // set event hander
+    te->timeProc = proc;
+    te->finalizerProc = finalizerProc;
+    
+    // set private data
+    te->clientData = clientData;
+
+    // put new event to the heand of the list
+    te->next = eventLoop->timeEventHead;
+    eventLoop->timeEventHead = te;
+
+    return id;
+}
+
+// delete object id of time event
+int aeDeleteTimeEvent(aeEventLoop *eventLoop, long long id)
+{
+    aeTimeEvent *te, *prev=NULL;
+    //foreach the list
+    te = eventLoop->timeEventHead;
+    
+    while(te){
+        if(te->id == id_
+        {
+            if(prev == NULL)
+                eventLoop->timeEventHead = te->next;
+            else
+                prev->next = te->next;
+            // exe clear func
+            if(te->finalizerProc)
+                te->finalizerProc(eventLoop, te->clientData);
+            
+            free(te);
+            
+            return AE_OK;
+        }
+    }
+    return AE_ERR;
+}
+
+// search the first timer to fire
+
+/* optimizations:
+ *  1) insert the event in order, so that the nearest is just the head
+ *      still, insertion or deletion is O(N)
+ *  2) use a skiplist to have the op as O(1), insertion as O(log(N))
+ *
+ */
+
+static aeTimeEvent *aeSearchNearestTimer(aeEventLoop *eventLoop){
+    aeTimeEvent *te = eventLoop->timeEventHead;
+    aeTimeEvent *nearest = NULL;
+    
+    while(te){
+        if(!nearest || te->when_sec < nearest->when_sec ||
+            (te->when_sec == nearest->when_sec && te->when_ms < nearest->when_ms))
+            nearest = te;
+        te = te->next;
+    }
+    return nearest;
+}
+
+//process all time events
+
+static int processTimeEvents(aeEventLoop *eventLoop){
+    int processed = 0;
+    aeTimeEvent *te;
+    long long maxId;
+    time_t now = time(NULL);
+    
+    return processed;
+}
