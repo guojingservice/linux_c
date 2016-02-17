@@ -46,7 +46,7 @@ typedef struct dict{
     long rehashidx; // rehashing not in progress if this equals -1
     int iterators; // number of iterators currently running
 
-};
+}dict;
 
 
 
@@ -72,7 +72,7 @@ typedef void (dictScanFunction)(void *privdata, const dictEntry *de);
     if((d)->type->valDestructor) \
         (d)->type->valDestructor((d)->privdata, (entry)->v.val); 
 
-#define dictSetVal(d, entry, _val__ do { \
+#define dictSetVal(d, entry, _val_) do { \
     if((d)->type->valDup) \
         entry->v.val = (d)->type->valDup((d)->privdata, _val_); \
     else \
@@ -97,7 +97,7 @@ typedef void (dictScanFunction)(void *privdata, const dictEntry *de);
     if((d)->type->keyDup) \
         entry->key = (d)->type->keyDup((d)->privdata, _key_); \
     else \
-        entry->key = (_key_); \ 
+        entry->key = (_key_); \
     }while(0)
 
 
@@ -130,6 +130,64 @@ API
 
 dict *dictCreate(dictType *type, void *privDataPtr);
 
+int dictExpand(dict *d, unsigned long size);
+
+int dictAdd(dict *d, void *key, void *val);
+
+dictEntry *dictAddRaw(dict *d, void *key);
+
+int dictReplace(dict *d, void *key, void *val);
+
+dictEntry *dictReplaceRaw(dict *d, void *key);
+
+int dictDelete(dict *d, const void *key);
+
+int dictDeleteNoFree(dict *d, const void *key);
+
+void dictRelease(dict *d);
+
+dictEntry *dictFind(dict *d, const void *key);
+
+void *dictFetchValue(dict *d, const void *key);
+
+int dictResize(dict *d);
+
+dictIterator *dictGetIterator(dict *d);
+
+dictIterator *dictGetSafeIterator(dict *d);
+
+dictEntry *dictNext(dictIterator *iter);
+
+void dictReleaseIterator(dictIterator *iter);
+
+dictEntry *dictGetRandomKey(dict *d);
+
+unsigned int dictGetSomeKeys(dict *d, dictEntry **des, unsigned int count);
+
+void dictPrintStats(dict *d);
+
+unsigned int dictGenHashFunction(const void *key, int len);
+
+unsigned int dictGenCaseHashFunction(const unsigned char *buf, int len);
+
+void dictEmpty(dict *d, void(callback)(void *));
+
+void dictEnableResize(void);
+
+void dictDisableResize(void);
+
+int dictRehash(dict *d, int n);
+
+int dictRehashMilliseconds(dict *d, int ms);
+
+void dictSetHashFunctionSeed(unsigned int initval);
+
+unsigned long dictScan(dict *d, unsigned long v, dictScanFunction *fn, void *privdata);
+
+// hash table type
+extern dictType dictTypeHeapstringCopykey;
+extern dictType dictTypeHeapStrings;
+extern dictType dictTypeHeapStringCopyKeyValue;
 
 
 #endif
