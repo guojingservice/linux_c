@@ -404,6 +404,15 @@ void dictReleaseIterator(dictIterator *iter){
     free(iter);
 }
 
+// TODO
+dictEntry *dictGetRandomKey(dict *d){
+    return NULL;
+}
+// TODO
+unsigned int dictGetSomeKeys(dict *d, dictEntry **des, unsigned int count){
+    return 0;
+}
+
 // stringcopy hash table type
 static unsigned int _dictStringCopyHTHashFunction(const void *key){
     return dictGenHashFunction(key, strlen(key));
