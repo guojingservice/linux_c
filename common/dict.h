@@ -19,6 +19,7 @@ typedef struct dictEntry{
         int64_t s64;
         double d;
     } v;
+    struct dictEntry *next;
 } dictEntry;
 
 typedef struct dictType{
