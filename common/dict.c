@@ -267,8 +267,142 @@ static int dictGenericDelete(dict *d, const void *key,
     return DICT_ERR;
 }
 
+// api delete element
+int dictDelete(dict *ht, const void *key){
+    return dictGenericDelete(ht, key, 0);
+}
+
+int dictDeleteNoFree(dict *ht, const void *key){
+    return dictGenericDelete(ht, key, 1);
+}
+
+// destroy an entire dictionary
+int _dictClear(dict *d, dictht *ht, void(callback)(void *)){
+    unsigned long i;
+    // free all the elements
+    for( i = 0; i < ht->size && ht->used > 0; ++i){
+        dictEntry *he, *nextHe;
+        if(callback && (i & 65535) == 0) callback(d->privdata);
+        if((he = ht->table[i]) == NULL) continue;
+
+        while(he){
+            nextHe = he->next;
+            dictFreeKey(d, he);
+            dictFreeVal(d, he);
+            free(he);
+            ht->used--;
+            he = nextHe;
+        }
+    }
+    
+    // free the table and the allocated cach structure
+    free(ht->table);
+    _dictReset(ht);
+    return DICT_OK;
+}
 
 
+// clear and release the hash table
+void dictRelease(dict *d){
+    _dictClear(d, &d->ht[0], NULL);
+    _dictClear(d, &d->ht[1], NULL);
+    free(d);
+}
+
+dictEntry *dictFind(dict *d, const void *key){
+    dictEntry *he;
+    unsigned int h, idx, table;
+
+    if (d->ht[0].size == 0) return NULL;
+
+    if(dictIsRehashing(d)) _dictRehashStep(d);
+
+    h = dictHashKey(d, key);
+    for(table =0; table <=1; table++){
+        idx = h &d->ht[table].sizemask;
+        he = d->ht[table].table[idx];
+        while(he){
+            if(dictCompareKeys(d, key, he->key))
+                return he;
+            he = he->next;
+        }
+        if(!dictIsRehashing(d)) return NULL;
+    }
+    return NULL;
+}
+void *dictFetchValue(dict *d, const void *key){
+    dictEntry *he;
+    he  = dictFind(d,key);
+    return he ? dictGetVal(he) : NULL;
+}
+
+// fingerprint????
+//
+//
+
+
+
+dictIterator *dictGetIterator(dict *d){
+    dictIterator *iter = (dictIterator *)malloc(sizeof(*iter));
+
+    iter->d = d;
+    iter->table = 0;
+    iter->index = -1;
+    iter->safe = 0 ;
+    iter->entry = NULL;
+    iter->nextEntry = NULL;
+    return iter;
+}
+
+dictIterator *dictGetSafeIterator(dict *d){
+    dictIterator *i = dictGetIterator(d);
+
+    i->safe = 1;
+    return i;
+}
+
+dictEntry *dictNext(dictIterator *iter){
+    while(1){
+        if(iter->entry == NULL){
+            dictht *ht = &iter->d->ht[iter->table];
+            if(iter->index == -1 && iter->table == 0){
+                if(iter->safe)
+                    iter->d->iterators++;
+                else
+                    iter->fingerprint = dictFingerprint(iter->d);
+            }
+            iter->index++;
+            if(iter->index >= (long) ht->size){
+                if(dictIsRehashing(iter->d) && iter->table == 0){
+                    iter->table++;
+                    iter->index = 0;
+                    ht = &iter->d->ht[1];
+                }
+                else
+                    break;
+            }
+            iter->entry = ht->table[iter->index];
+        }
+        else
+            iter->entry = iter->nextEntry;
+        if(iter->entry){
+            iter->nextEntry = iter->entry->next;
+            return iter->entry;
+        }
+    }
+    return NULL;
+}
+
+void dictReleaseIterator(dictIterator *iter){
+    if(!(iter->index == -1 && iter->table == 0)){
+        if(iter->safe)
+            iter->d->iterators--;
+        else
+            assert(iter->fingerprint == dictFingerprint(iter->d));
+
+    }
+    free(iter);
+}
 
 // stringcopy hash table type
 static unsigned int _dictStringCopyHTHashFunction(const void *key){
