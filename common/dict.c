@@ -505,4 +505,8 @@ dictType dictTypeHeapStringCopyKeyValue= {
     _dictStringDestructor,
 };
 
+void dictSetHashFunctionSeed(uint32_t seed){
+    dict_hash_function_seed = seed;
+}
+
 
