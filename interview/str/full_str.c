@@ -41,11 +41,59 @@ void recursion_full_str(char *str, int from, int to)
     
 }
 
+// O(n)
+void revert_str(char *pStr, int n)
+{
+    if( n <= 1)
+    {
+        return;
+    }
+    int i = 0;
+    char ch = 0;
+    for( i = 0; i < n / 2; ++i)
+    {
+        ch = *(pStr + i);
+        *(pStr + i) = *(pStr + (n - i -1));
+        *(pStr + (n - i - 1)) = ch;
+    }
+
+}
+
+
+// 求下一个刚好比给定字符串大的字符串
+
+void next_permutation(char *str, int len)
+{
+    if(len <= 0)
+    {
+        return;
+    }
+    int i = len - 1;
+    char ch = str[len-1];
+    while( str[i] >= ch && i >= 0)
+    {
+        ch = str[i--];
+    }
+    // already the most big
+    if( i < 0 )
+    {
+        return;
+    }
+    
+    char temp = str[i];
+    str[i] = str[len-1];
+    str[len-1] = temp;
+    revert_str(str+i+1, len - i - 1);
+    
+}
 
 int main()
 {
     char temp[64];
-    snprintf(temp, sizeof(temp)-1, "%s", "abcd");
-    recursion_full_str(temp, 0, strlen(temp)); 
+    snprintf(temp, sizeof(temp)-1, "%s", "abcdec");
+    //recursion_full_str(temp, 0, strlen(temp)); 
+    next_permutation(temp, strlen(temp));
+    printf("result is : [%s]\n", temp);
+
     return 0;
 }
