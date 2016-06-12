@@ -79,10 +79,15 @@ void next_permutation(char *str, int len)
     {
         return;
     }
-    
+    // find the last bigger fig then str[i] 
+    int j = len -1;
+    while(str[j] < str[i] && j > 0)
+    {
+        j--;
+    }
     char temp = str[i];
-    str[i] = str[len-1];
-    str[len-1] = temp;
+    str[i] = str[j];
+    str[j] = temp;
     revert_str(str+i+1, len - i - 1);
     
 }
