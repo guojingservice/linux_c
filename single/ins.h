@@ -2,17 +2,17 @@
 #define _SINGLE_INS_H
 #include <pthread.h>
 
-extern 
 
 class SingleInstance
 {
-    SignleInstance *getInstance();   
+    static SingleInstance *getInstance();   
 
 private:
-    SingleInstance(){ _ins = NULL;}
+    SingleInstance();
 
-    SingleInstance *_ins;
-
+    static SingleInstance *m_ins;
+    
+    static pthread_mutex_t m_mutex;
 };
 
 
